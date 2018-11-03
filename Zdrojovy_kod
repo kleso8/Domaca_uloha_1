@@ -1,0 +1,71 @@
+import math
+
+typ_zobrazenia = input("""Napíšte písmeno pre daný typ zobrazenia. Písmeno:   L pre Lambertovo zobrazenie
+                                                    A pre Marinovo zobrazenie
+                                                    B pre Braunovo zobrazenie
+                                                    M pre Mercatorovo zobrazenie""")
+
+if typ_zobrazenia not in ("L", "A", "B", "M"):  # validita vstupu, program funguje len pre 4 zobrazenia
+    print("Zadali ste nesprávne písmeno.")
+    exit()
+
+mierka = int(input("Zadajte celočíselnú mierku mapy."))  # validita vstupu, program funguje len pre celé kladné čísla
+if mierka <= 0:
+    print("Zadali ste nesprávnu mierku mapy.")
+    exit()
+
+vyber_polomeru = float(input("Zadajte polomer Zeme v km, ak zadáte 0, tak sa pri výpočte použije polomer 6371,11 km."))
+
+if vyber_polomeru == 0:  # možnosť výberu polomeru, počíta sa s možnosťou zadania 0 ako defaultného polomeru
+    polomer = 6371.11
+else:
+    polomer = vyber_polomeru
+
+if polomer < 0:  # validita vstupu, program pracuje len s kladnými hodnotami polomeru
+    print("Zadali ste záporný polomer Zeme.")
+    exit()
+
+R = polomer * 100000 / mierka  # prepočet polomeru na cm a následne cez zadanú mierku
+
+poludniky = []
+
+for v in range(-180, 190, 10):
+    x = R * v / 180 * math.pi  # vzorec na výpočet poludníkov, pre všetky zobrazenia rovnaké
+    poludniky.append(x)
+    poludniky = [float(round(x, 1)) for x in poludniky]  # zaokrúhlenie hodnôt zoznamu na 1 desatinné miesto
+
+for n, x in enumerate(poludniky):  # zmena hodnôt zoznamu x > 100 a x < -100 na pomlčku
+    if x > 100 or x < -100:
+        poludniky[n] = "-"
+
+print("Poludníky:", poludniky)
+
+rovnobezky = []
+
+for u in range(-90, 100, 10):  # pokrytie vzorcov pre výpočet každého zobrazenia okrem Mercatora
+    if typ_zobrazenia == "L":
+        y = R * math.sin(u / 180 * math.pi)  # vo vzorci zahrnutá zmena uhlov z radiánov na stupne cez 180*pi
+        rovnobezky.append(y)
+    elif typ_zobrazenia == "A":
+        y = R * u / 180 * math.pi
+        rovnobezky.append(y)
+    elif typ_zobrazenia == "B":
+        y = (2 * R * math.tan(u / 360 * math.pi))
+        rovnobezky.append(y)
+
+for u in range(-80, 90, 10):  # zmena intervalu rovnobežiek kvôli tomu, že v Mercatorovi pri 90° dochádza k deleniu nulou, výsledok je nekonečno
+    if typ_zobrazenia == "M":
+        y = R * math.log(1/(math.tan((90 - u) / 360 * math.pi)))
+        rovnobezky.append(y)
+
+if typ_zobrazenia == "M":  # pridanie jednej hodnoty na začiatok a koniec zoznamu, reprezentujú nekonečno pri 90° resp. -90°
+    rovnobezky.extend([-101, 101])
+
+rovnobezky = [float(round(y, 1)) for y in rovnobezky]
+rovnobezky.sort()
+
+for m, y in enumerate(rovnobezky):  # zmena hodnôt zoznamu y > 100 a y < -100 na pomlčku
+    if y > 100 or y < -100:
+        rovnobezky[m] = "-"
+
+print("Rovnobežky:", rovnobezky)
